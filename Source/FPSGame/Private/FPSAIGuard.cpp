@@ -13,7 +13,6 @@ AFPSAIGuard::AFPSAIGuard()
 	AISensor = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("AI Sensor"));
 
 	AISensor->OnSeePawn.AddDynamic(this, &AFPSAIGuard::OnSeePlayer);
-	//AISensor->OnHearNoise.AddDynamic(this, &AFPSAIGuard::OnHear);
 
 }
 
@@ -21,7 +20,8 @@ AFPSAIGuard::AFPSAIGuard()
 void AFPSAIGuard::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	AISensor->OnHearNoise.AddDynamic(this, &AFPSAIGuard::OnHear);
+
 }
 
 // Called every frame
@@ -44,6 +44,12 @@ void AFPSAIGuard::OnSeePlayer(APawn* SeenPawn)
 
 void AFPSAIGuard::OnHear(APawn* InstigatorPawn, const FVector& Location, float Volume)
 {
+	if (!InstigatorPawn)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnHear called but InstigatorPawn is null"))
+		return;
+	}
 
+	DrawDebugSphere(GetWorld(), Location, 64.0f, 32, FColor::Blue, false, 10.0f);
 }
 
