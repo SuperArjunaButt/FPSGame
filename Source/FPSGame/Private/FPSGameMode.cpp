@@ -17,7 +17,7 @@ AFPSGameMode::AFPSGameMode()
 	HUDClass = AFPSHUD::StaticClass();
 }
 
-void AFPSGameMode::CompleteMission(APawn* InstigatorPawn)
+void AFPSGameMode::CompleteMission(APawn* InstigatorPawn, bool bMissionSuccess)
 {
 	//disable input and end mission, tally up and score or similar state with the instigating actor
 
@@ -26,7 +26,7 @@ void AFPSGameMode::CompleteMission(APawn* InstigatorPawn)
 		if (SpectatingViewpointClass)
 		{
 			InstigatorPawn->DisableInput(nullptr);
-			OnMissionCompleted(InstigatorPawn);
+			OnMissionCompleted(InstigatorPawn, bMissionSuccess);
 
 			APlayerController* PC = Cast<APlayerController>(InstigatorPawn->GetController());
 			//Change viewpoint if any valid actor found
