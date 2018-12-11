@@ -3,7 +3,11 @@
 #include "FPSAIGuard.h"
 #include <Perception/PawnSensingComponent.h>
 #include <DrawDebugHelpers.h>
+#include <Engine/TargetPoint.h>
 #include "FPSGameMode.h"
+#include <Kismet/KismetSystemLibrary.h>
+#include <AIController.h>
+#include <Blueprint/AIBlueprintHelperLibrary.h>
 
 // Sets default values
 AFPSAIGuard::AFPSAIGuard()
@@ -14,8 +18,11 @@ AFPSAIGuard::AFPSAIGuard()
 	AISensor = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("AI Sensor"));
 
 	AISensor->OnSeePawn.AddDynamic(this, &AFPSAIGuard::OnSeePlayer);
-
+	GuardState = EAIState::Idle;
+	currentTargetPoint = 0;
 }
+
+
 
 // Called when the game starts or when spawned
 void AFPSAIGuard::BeginPlay()
@@ -23,7 +30,7 @@ void AFPSAIGuard::BeginPlay()
 	Super::BeginPlay();
 	ResetOrientation();
 	AISensor->OnHearNoise.AddDynamic(this, &AFPSAIGuard::OnHear);
-
+	UAIBlueprintHelperLibrary::SimpleMoveToActor(GetController(), TargetPoints[currentTargetPoint]);
 }
 
 // Called every frame
@@ -31,6 +38,40 @@ void AFPSAIGuard::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (GuardState == EAIState::Idle && TargetPoints.Num() > 0)
+	{
+		//ATargetPoint* currentTarget = TargetPoints[currentTargetPoint];
+		//AAIController* aic = Cast<AAIController>(GetController());
+		//aic->MoveTo(currentTarget);
+
+		FVector dist = GetActorLocation() - TargetPoints[currentTargetPoint]->GetActorLocation();
+		if (dist.Size() < patrolTolerance)
+		{
+			MoveToNextPatrolPoint();
+		}
+		UE_LOG(LogTemp, Warning, TEXT("%f"), dist.Size())
+	}
+	
+}
+
+void AFPSAIGuard::MoveToNextPatrolPoint()
+{
+	currentTargetPoint++;
+	currentTargetPoint = currentTargetPoint % TargetPoints.Num();
+	UAIBlueprintHelperLibrary::SimpleMoveToActor(GetController(), TargetPoints[currentTargetPoint]);
+}
+
+void AFPSAIGuard::SetGuardState(EAIState GState)
+{
+	if (GuardState == GState)
+	{
+		return;
+	}
+	else
+	{
+		GuardState = GState;
+		OnStateChanged(GState);
+	}
 }
 
 void AFPSAIGuard::OnSeePlayer(APawn* SeenPawn)
@@ -43,6 +84,7 @@ void AFPSAIGuard::OnSeePlayer(APawn* SeenPawn)
 	AFPSGameMode* gameMode = Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode());
 	if (gameMode)
 	{
+		SetGuardState(EAIState::Alerted);
 		gameMode->CompleteMission(SeenPawn, false);
 	}
 	//DrawDebugSphere(GetWorld(), SeenPawn->GetActorLocation(), 64.0f, 32, FColor::Red, false, 10.0f);
@@ -50,7 +92,11 @@ void AFPSAIGuard::OnSeePlayer(APawn* SeenPawn)
 
 void AFPSAIGuard::OnHear(APawn* InstigatorPawn, const FVector& Location, float Volume)
 {
-	
+	if (GuardState == EAIState::Alerted)
+	{
+		return;
+	}
+
 	if (!InstigatorPawn)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("OnHear called but InstigatorPawn is null"))
@@ -65,12 +111,20 @@ void AFPSAIGuard::OnHear(APawn* InstigatorPawn, const FVector& Location, float V
 	rotation.Roll = 0.0f;
 
 	SetActorRotation(rotation);
-
+	SetGuardState(EAIState::Suspicious);
 	GetWorldTimerManager().SetTimer(TimerHandle_ResetOrientation, this, &AFPSAIGuard::ResetOrientation, 3.0f, false);
 	DrawDebugSphere(GetWorld(), Location, 64.0f, 32, FColor::Blue, false, 10.0f);
+
+
 }
 
 void AFPSAIGuard::ResetOrientation()
 {
 	SetActorRotation(originalRotation);
+	
+	if (GuardState == EAIState::Alerted)
+	{
+		return;
+	}
+	SetGuardState(EAIState::Idle);
 }

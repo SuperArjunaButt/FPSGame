@@ -4,9 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include <Navigation/PathFollowingComponent.h>
+#include <AITypes.h>
 #include "FPSAIGuard.generated.h"
 
 class UPawnSensingComponent;
+class ATargetPoint;
+
+UENUM(BlueprintType)
+enum class EAIState : uint8
+{
+	Idle,
+	Suspicious,
+	Alerted
+};
 
 UCLASS()
 class FPSGAME_API AFPSAIGuard : public ACharacter
@@ -30,9 +41,23 @@ protected:
 	UFUNCTION()
 	void OnHear(APawn* InstigatorPawn, const FVector& Location, float Volume);
 
+	UPROPERTY(EditAnywhere, Category = AI)
+	float patrolTolerance = 50.0f;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(EditAnywhere, Category = AI)
+	TArray<ATargetPoint*> TargetPoints;
+
+	UFUNCTION()
+	void SetGuardState(EAIState GState);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = AI)
+	void OnStateChanged(EAIState newState);
+
+
 
 private:
 	
@@ -42,4 +67,11 @@ private:
 
 	UFUNCTION()
 	void ResetOrientation();
+
+	EAIState GuardState;
+
+	int currentTargetPoint;
+
+	void MoveToNextPatrolPoint();
+
 };
