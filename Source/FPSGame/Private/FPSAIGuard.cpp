@@ -30,7 +30,7 @@ void AFPSAIGuard::BeginPlay()
 	Super::BeginPlay();
 	ResetOrientation();
 	AISensor->OnHearNoise.AddDynamic(this, &AFPSAIGuard::OnHear);
-	UAIBlueprintHelperLibrary::SimpleMoveToActor(GetController(), TargetPoints[currentTargetPoint]);
+	if(TargetPoints.Num() > 0) UAIBlueprintHelperLibrary::SimpleMoveToActor(GetController(), TargetPoints[currentTargetPoint]);
 }
 
 // Called every frame
