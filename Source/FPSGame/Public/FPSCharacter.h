@@ -54,6 +54,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = Gameplay)
 	bool bIsCarryingObjective = false;
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFire();
+
 protected:
 	
 	/** Fires a projectile. */
