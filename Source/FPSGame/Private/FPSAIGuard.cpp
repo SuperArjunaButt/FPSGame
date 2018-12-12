@@ -8,6 +8,7 @@
 #include <Kismet/KismetSystemLibrary.h>
 #include <AIController.h>
 #include <Blueprint/AIBlueprintHelperLibrary.h>
+#include <UnrealNetwork.h>
 
 // Sets default values
 AFPSAIGuard::AFPSAIGuard()
@@ -70,8 +71,24 @@ void AFPSAIGuard::SetGuardState(EAIState GState)
 	else
 	{
 		GuardState = GState;
-		OnStateChanged(GState);
+		OnRep_GuardState();
+
 	}
+}
+
+void AFPSAIGuard::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AFPSAIGuard, GuardState);
+}
+
+
+
+
+void AFPSAIGuard::OnRep_GuardState()
+{
+	OnStateChanged(GuardState);
 }
 
 void AFPSAIGuard::OnSeePlayer(APawn* SeenPawn)

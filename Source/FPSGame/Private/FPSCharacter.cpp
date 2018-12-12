@@ -34,6 +34,18 @@ AFPSCharacter::AFPSCharacter()
 
 }
 
+void AFPSCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (!IsLocallyControlled())
+	{
+		FRotator newRot = CameraComponent->RelativeRotation;
+		newRot.Pitch = FMath::ClampAngle(RemoteViewPitch * 360.0f / 255.0f, -89.0f, 89.0f);
+		CameraComponent->SetRelativeRotation(newRot);
+	}
+	
+}
 
 void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {

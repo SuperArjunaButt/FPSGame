@@ -57,7 +57,11 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = AI)
 	void OnStateChanged(EAIState newState);
 
+	UPROPERTY(ReplicatedUsing=OnRep_GuardState)
+	EAIState GuardState;
 
+	UFUNCTION()
+	void OnRep_GuardState();
 
 private:
 	
@@ -68,7 +72,7 @@ private:
 	UFUNCTION()
 	void ResetOrientation();
 
-	EAIState GuardState;
+
 
 	int currentTargetPoint;
 
