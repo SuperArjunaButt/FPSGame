@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include <Components/PawnNoiseEmitterComponent.h>
+#include "Net/UnrealNetwork.h"
 
 
 AFPSCharacter::AFPSCharacter()
@@ -132,4 +133,14 @@ void AFPSCharacter::ServerFire_Implementation()
 bool AFPSCharacter::ServerFire_Validate()
 {
 	return true;
+}
+
+void AFPSCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AFPSCharacter, bIsCarryingObjective);
+
+	//TODO: Uncomment at end of section
+	//DOREPLIFETIME_CONDITION(AFPSCharacter, bIsCarryingObjective, COND_OwnerOnly);
 }

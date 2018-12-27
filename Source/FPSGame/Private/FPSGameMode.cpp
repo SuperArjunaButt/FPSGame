@@ -6,6 +6,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include <Camera/PlayerCameraManager.h>
 #include <Kismet/GameplayStatics.h>
+#include "FPSGameStateBase.h"
 
 AFPSGameMode::AFPSGameMode()
 {
@@ -15,6 +16,9 @@ AFPSGameMode::AFPSGameMode()
 
 	// use our custom HUD class
 	HUDClass = AFPSHUD::StaticClass();
+
+	GameStateClass = AFPSGameStateBase::StaticClass();
+
 }
 
 void AFPSGameMode::CompleteMission(APawn* InstigatorPawn, bool bMissionSuccess)
@@ -25,17 +29,16 @@ void AFPSGameMode::CompleteMission(APawn* InstigatorPawn, bool bMissionSuccess)
 	{
 		if (SpectatingViewpointClass)
 		{
-			InstigatorPawn->DisableInput(nullptr);
+			
 			OnMissionCompleted(InstigatorPawn, bMissionSuccess);
 
-			APlayerController* PC = Cast<APlayerController>(InstigatorPawn->GetController());
-			//Change viewpoint if any valid actor found
-			if (PC)
+			for (FConstPlayerControllerIterator pcitr = GetWorld()->GetPlayerControllerIterator(); pcitr; pcitr++)
 			{
-
 				TArray<AActor*> ReturnedActors;
 				UGameplayStatics::GetAllActorsOfClass(this, SpectatingViewpointClass, ReturnedActors);
-				if (ReturnedActors.Num() > 0)
+				
+				APlayerController* PC = pcitr->Get();
+				if (PC && ReturnedActors.Num() > 0)
 				{
 					AActor* MissionCompleteViewpoint = ReturnedActors[0];
 					PC->SetViewTargetWithBlend(MissionCompleteViewpoint, 0.5f, EViewTargetBlendFunction::VTBlend_Cubic);
@@ -47,4 +50,12 @@ void AFPSGameMode::CompleteMission(APawn* InstigatorPawn, bool bMissionSuccess)
 			UE_LOG(LogTemp, Warning, TEXT("Spectating Viewpoint Actor not found! Please check game mode class and add valid subclass.  Cannot change spectating view target"))
 		}
 	}
+
+	AFPSGameStateBase* GS = GetGameState<AFPSGameStateBase>();
+	if (GS)
+	{
+		GS->MulticastOnMissionComplete(InstigatorPawn, bMissionSuccess);
+	}
+	
+
 }
